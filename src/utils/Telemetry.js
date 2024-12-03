@@ -25,15 +25,14 @@ class Telemetry {
 
     // NodeSDK ile telemetriyi başlatıyoruz
     this.sdk = new NodeSDK({
-      traceExporter: this.otlpExporter,
+      traceExporter: this.otlpExporter, // Varsayılan olarak OTLP Exporter kullanıyoruz
       resource: new Resource({
         'service.name': serviceName,
       }),
-    });
-
-    // Diğer exporter'ları toplu olarak ekliyoruz
-    [this.zipkinExporter, this.jeagerExporter].forEach(exporter => {
-      this.sdk.addSpanProcessor(new SimpleSpanProcessor(exporter));
+      spanProcessors: [
+        new SimpleSpanProcessor(this.zipkinExporter), // Zipkin Exporter ekliyoruz
+        new SimpleSpanProcessor(this.jeagerExporter),  // Jaeger Exporter ekliyoruz
+      ],
     });
 
     // SDK'yı başlatıyoruz
