@@ -4,7 +4,7 @@ const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
 const { Resource } = require('@opentelemetry/resources');
 const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const { SpanKind } = require('@opentelemetry/api');
+const {  context, SpanKind } = require('@opentelemetry/api');
 
 class Telemetry {
   constructor() {
