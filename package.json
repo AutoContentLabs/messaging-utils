@@ -12,11 +12,13 @@
     "@opentelemetry/sdk-trace-node": "^1.28.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "cheerio": "^1.0.0",
     "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
     "os": "^0.1.2",
     "path": "^0.12.7",
     "ping": "^0.4.4",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "xml2js": "^0.6.2"
   }
 }

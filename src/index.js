@@ -13,7 +13,7 @@ const instance = require("./helpers/instance");
 const logger = require("./helpers/logger");
 const progress = require("./helpers/progress");
 const retry = require("./helpers/retry");
-
+const parser = require("./helpers/parser");
 
 module.exports = {
     // utils
@@ -29,4 +29,5 @@ module.exports = {
     logger,
     progress,
     retry,
+    parser    
 };
