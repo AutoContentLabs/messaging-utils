@@ -1,0 +1,22 @@
+{
+  "name": "@auto-content-labs/messaging-utils",
+  "version": "1.0.0",
+  "description": "A utility and helper functions package for messaging systems.",
+  "main": "src/index.js",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-jaeger": "^1.28.0",
+    "@opentelemetry/exporter-zipkin": "^1.28.0",
+    "@opentelemetry/resources": "^1.28.0",
+    "@opentelemetry/sdk-trace-base": "^1.28.0",
+    "@opentelemetry/sdk-trace-node": "^1.28.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "crypto": "^1.0.1",
+    "fs": "^0.0.1-security",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "ping": "^0.4.4",
+    "winston": "^3.17.0"
+  }
+}
