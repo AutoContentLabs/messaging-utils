@@ -1,58 +1,50 @@
-const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
-const { Resource } = require('@opentelemetry/resources');
-const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
+const { NodeSDK } = require('@opentelemetry/sdk-node');  // OpenTelemetry SDK for Node.js
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-grpc'); // OTLP Exporter (gRPC)
-const { trace, context, SpanKind } = require('@opentelemetry/api');
-const { NodeSDK } = require('@opentelemetry/sdk-node');  // OpenTelemetry SDK for Node.js
+const { Resource } = require('@opentelemetry/resources');
 
 class Telemetry {
   constructor() {
     const serviceName = `${process.env.GROUP_ID}-${process.env.MESSAGE_SYSTEM}`;
 
-    // Zipkin Exporter
+    // Exporter'ları hazırlıyoruz
     this.zipkinExporter = new ZipkinExporter({
       url: `http://${process.env.ZIPKIN_HOST_ADDRESS}:${process.env.ZIPKIN_HOST_PORT}/api/v2/spans`,
     });
 
-    // Jaeger Exporter
     this.jeagerExporter = new JaegerExporter({
       endpoint: `http://${process.env.JAEGER_HOST_ADDRESS}:${process.env.JAEGER_HTTP_PORT}/api/traces`,
     });
 
-    // OTLP (gRPC) Exporter
     this.otlpExporter = new OTLPTraceExporter({
       url: `http://${process.env.OTLP_HOST_ADDRESS}:${process.env.OTLP_HOST_PORT}`,  // OTLP gRPC URL
     });
 
-    // Tracer Provider oluşturuluyor
-    this.provider = new NodeTracerProvider({
+    // NodeSDK ile telemetriyi başlatıyoruz
+    this.sdk = new NodeSDK({
+      traceExporter: this.otlpExporter,  // Varsayılan OTLP Exporter kullanıyoruz
       resource: new Resource({
         'service.name': serviceName,
       }),
     });
 
-    // Exporter'ları ekliyoruz
-    this.provider.addSpanProcessor(new SimpleSpanProcessor(this.zipkinExporter));
-    this.provider.addSpanProcessor(new SimpleSpanProcessor(this.jeagerExporter));
-    this.provider.addSpanProcessor(new SimpleSpanProcessor(this.otlpExporter));  // OTLP Exporter ekledik
+    // Diğer exporter'ları ekliyoruz
+    this.sdk.addSpanProcessor(new SimpleSpanProcessor(this.zipkinExporter));
+    this.sdk.addSpanProcessor(new SimpleSpanProcessor(this.jeagerExporter));
 
-    // Tracer provider'ı kaydediyoruz
-    this.provider.register();
-
-    // OpenTelemetry SDK üzerinden Tracer elde ediyoruz
-    this.tracer = trace.getTracer(serviceName);
+    // SDK'yı başlatıyoruz
+    this.sdk.start();
   }
 
   // Tracer'ı döndürme
   getTracer() {
-    return this.tracer;
+    return this.sdk.tracer;
   }
 
   // Span başlatma
   startSpan(name, options, context) {
-    return this.tracer.startSpan(name, options, context);
+    return this.sdk.tracer.startSpan(name, options, context);
   }
 
   // Custom TraceId ve SpanId ile Span başlatma

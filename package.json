@@ -5,12 +5,8 @@
   "main": "src/index.js",
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-jaeger": "^1.28.0",
-    "@opentelemetry/exporter-otlp-grpc": "^0.26.0",
-    "@opentelemetry/exporter-zipkin": "^1.28.0",
+    "@opentelemetry/sdk-node": "^0.55.0",
     "@opentelemetry/resources": "^1.28.0",
-    "@opentelemetry/sdk-trace-base": "^1.28.0",
-    "@opentelemetry/sdk-trace-node": "^1.28.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "cheerio": "^1.0.0",
