@@ -1,10 +1,9 @@
-const { NodeSDK } = require('@opentelemetry/sdk-node');
+const { BasicTracerProvider, SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
 const { Resource } = require('@opentelemetry/resources');
-const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const {  context, SpanKind } = require('@opentelemetry/api');
+const { context, SpanKind, trace } = require('@opentelemetry/api');
 
 class Telemetry {
   constructor() {
@@ -23,28 +22,27 @@ class Telemetry {
       url: `http://${process.env.OTLP_HOST_ADDRESS}:${process.env.OTLP_HOST_PORT}`,
     });
 
-    // NodeSDK ile telemetriyi başlatıyoruz
-    this.sdk = new NodeSDK({
-      traceExporter: this.otlpExporter, // Varsayılan olarak OTLP Exporter kullanıyoruz
+    // TracerProvider oluşturuyoruz
+    this.tracerProvider = new BasicTracerProvider({
       resource: new Resource({
         'service.name': serviceName,
       }),
-      spanProcessors: [
-        new SimpleSpanProcessor(this.zipkinExporter), // Zipkin Exporter ekliyoruz
-        new SimpleSpanProcessor(this.jeagerExporter),  // Jaeger Exporter ekliyoruz
-      ],
     });
 
-    // SDK'yı başlatıyoruz
-    this.sdk.start();
-  }
+    // Exporter'ları span processor olarak ekliyoruz
+    this.tracerProvider.addSpanProcessor(new SimpleSpanProcessor(this.zipkinExporter)); // Zipkin Exporter
+    this.tracerProvider.addSpanProcessor(new SimpleSpanProcessor(this.jeagerExporter)); // Jaeger Exporter
+    this.tracerProvider.addSpanProcessor(new SimpleSpanProcessor(this.otlpExporter));  // OTLP Exporter
 
-  getTracer() {
-    return this.sdk.tracer;
+    // Tracer provider'ı kaydediyoruz
+    this.tracerProvider.register();
+
+    // Tracer'ı alıyoruz
+    this.tracer = this.tracerProvider.getTracer('default');
   }
 
   startSpan(name, options, context) {
-    return this.sdk.tracer.startSpan(name, options, context);
+    return this.tracer.startSpan(name, options, context);
   }
 
   start(spanName, eventName, pair) {
