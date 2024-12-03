@@ -11,7 +11,7 @@
  */
 
 const winston = require('winston');
-const GelfTransport = require('winston-gelf'); // Directly import GelfTransport
+// const GelfTransport = require('winston-gelf'); // Directly import GelfTransport
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -125,33 +125,33 @@ const logger = winston.createLogger({
       ),
     }),
 
-    new GelfTransport({
-      gelfPro: {
-        fields: {
-          env: process.env.NODE_ENV,  // Customize with your environment settings
-          facility: 'XYZ'
-        },
-        adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
-        adapterOptions: {
-          host: process.env.LOGTASH_HOST_ADDRESS || "127.0.0.1",
-          port: process.env.LOGTASH_HOST_PORT || 5044,
-        }
-      }
-    }),
+    // new GelfTransport({
+    //   gelfPro: {
+    //     fields: {
+    //       env: process.env.NODE_ENV,  // Customize with your environment settings
+    //       facility: 'XYZ'
+    //     },
+    //     adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
+    //     adapterOptions: {
+    //       host: process.env.LOGTASH_HOST_ADDRESS || "127.0.0.1",
+    //       port: process.env.LOGTASH_HOST_PORT || 5044,
+    //     }
+    //   }
+    // }),
 
-    new GelfTransport({
-      gelfPro: {
-        fields: {
-          env: process.env.NODE_ENV,
-          facility: 'XYZ'
-        },
-        adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
-        adapterOptions: {
-          host: process.env.GRAYLOG_HOST_ADDRESS || "127.0.0.1",
-          port: process.env.GRAYLOG_HOST_PORT || 12201,
-        }
-      }
-    })
+    // new GelfTransport({
+    //   gelfPro: {
+    //     fields: {
+    //       env: process.env.NODE_ENV,
+    //       facility: 'XYZ'
+    //     },
+    //     adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
+    //     adapterOptions: {
+    //       host: process.env.GRAYLOG_HOST_ADDRESS || "127.0.0.1",
+    //       port: process.env.GRAYLOG_HOST_PORT || 12201,
+    //     }
+    //   }
+    // })
 
   ],
   exitOnError: false,
