@@ -11,7 +11,7 @@
  */
 
 const winston = require('winston');
-require('winston-gelf');
+const GelfTransport = require('winston-gelf'); // Directly import GelfTransport
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -125,19 +125,34 @@ const logger = winston.createLogger({
       ),
     }),
 
-    new winston.transports.Gelf({
-      level: 'info',
+    new GelfTransport({
       gelfPro: {
-        host: 'logstash',
-        port: 5044,
-        timeout: 2000
-      },
-      handleExceptions: true,
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
+        fields: {
+          env: process.env.NODE_ENV,  // Customize with your environment settings
+          facility: 'XYZ'
+        },
+        adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
+        adapterOptions: {
+          host: process.env.LOGTASH_HOST_ADDRESS || "127.0.0.1",
+          port: process.env.LOGTASH_HOST_PORT || 5044,
+        }
+      }
+    }),
+
+    new GelfTransport({
+      gelfPro: {
+        fields: {
+          env: process.env.NODE_ENV,
+          facility: 'XYZ'
+        },
+        adapterName: 'udp', // can be 'udp', 'tcp', or 'tcp-tls'
+        adapterOptions: {
+          host: process.env.GRAYLOG_HOST_ADDRESS || "127.0.0.1",
+          port: process.env.GRAYLOG_HOST_PORT || 12201,
+        }
+      }
     })
+
   ],
   exitOnError: false,
 });

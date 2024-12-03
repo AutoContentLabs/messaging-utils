@@ -3,11 +3,12 @@ const { Resource } = require('@opentelemetry/resources');
 const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-otlp-grpc'); // OTLP Exporter (gRPC)
 const { trace, context, SpanKind } = require('@opentelemetry/api');
+const { NodeSDK } = require('@opentelemetry/sdk-node');  // OpenTelemetry SDK for Node.js
 
 class Telemetry {
   constructor() {
-    // 
     const serviceName = `${process.env.GROUP_ID}-${process.env.MESSAGE_SYSTEM}`;
 
     // Zipkin Exporter
@@ -20,38 +21,47 @@ class Telemetry {
       endpoint: `http://${process.env.JAEGER_HOST_ADDRESS}:${process.env.JAEGER_HTTP_PORT}/api/traces`,
     });
 
-    // Tracer Provider
+    // OTLP (gRPC) Exporter
+    this.otlpExporter = new OTLPTraceExporter({
+      url: `http://${process.env.OTLP_HOST_ADDRESS}:${process.env.OTLP_HOST_PORT}`,  // OTLP gRPC URL
+    });
+
+    // Tracer Provider oluşturuluyor
     this.provider = new NodeTracerProvider({
       resource: new Resource({
         'service.name': serviceName,
       }),
     });
 
-    // Add Zipkin ve Jaeger span processors
+    // Exporter'ları ekliyoruz
     this.provider.addSpanProcessor(new SimpleSpanProcessor(this.zipkinExporter));
     this.provider.addSpanProcessor(new SimpleSpanProcessor(this.jeagerExporter));
+    this.provider.addSpanProcessor(new SimpleSpanProcessor(this.otlpExporter));  // OTLP Exporter ekledik
 
-    // Register the provider
+    // Tracer provider'ı kaydediyoruz
     this.provider.register();
 
-    // Get the tracer
+    // OpenTelemetry SDK üzerinden Tracer elde ediyoruz
     this.tracer = trace.getTracer(serviceName);
   }
 
+  // Tracer'ı döndürme
   getTracer() {
     return this.tracer;
   }
 
+  // Span başlatma
   startSpan(name, options, context) {
     return this.tracer.startSpan(name, options, context);
   }
 
+  // Custom TraceId ve SpanId ile Span başlatma
   start(spanName, eventName, pair) {
     const spanContext = {
-      traceId: pair.headers.traceId,  // Custom traceId (16 bytes)
-      spanId: pair.key.recordId,      // Custom spanId (8 bytes)
-      traceFlags: 1,                  // Trace flags (default 'sampled')
-      parentId: undefined,            // No parent span for root span
+      traceId: pair.headers.traceId,  // Custom traceId (16 byte)
+      spanId: pair.key.recordId,      // Custom spanId (8 byte)
+      traceFlags: 1,                  // Trace flags (örneğin 'sampled' seçeneği)
+      parentId: undefined,            // Root span olduğu için parentId yok
     };
 
     const options = {
@@ -61,41 +71,42 @@ class Telemetry {
         'groupId': process.env.GROUP_ID,
         'clientId': process.env.CLIENT_ID,
         'eventName': eventName,
-        ...this.convertModelToTags(pair)
+        ...this.convertModelToTags(pair),  // Tag verilerini dönüştürme
       }
     };
 
     const currentContext = context.active() || context.setSpan(context.active(), spanContext);
 
-    // Start span with the custom context containing your traceId and spanId
+    // Custom context ile span başlatma
     const span = this.startSpan(spanName, options, currentContext);
 
-    // Explicitly set traceId and spanId as attributes
+    // TraceId ve SpanId'yi span attribute olarak ekleme
     span.setAttribute('traceId', spanContext.traceId);
     span.setAttribute('spanId', spanContext.spanId);
 
     return span;
   }
 
+  // Model verisini düzleştirip tag'lere dönüştürme
   convertModelToTags(pair) {
     const tags = {};
 
     function flatten(obj, prefix = '') {
-      // If obj is an object and not null, we iterate over its keys
+      // Eğer obj bir nesne ise, onun anahtarlarını dolaş
       if (obj && typeof obj === 'object') {
         for (const [key, value] of Object.entries(obj)) {
-          // Create a new prefix for nested keys
+          // Yeni bir prefix oluştur
           const newKey = prefix ? `${prefix}.${key}` : key;
           // Recursively handle nested objects
           flatten(value, newKey);
         }
       } else {
-        // If it's not an object, it's a leaf value. Add it to the tags
+        // Eğer bir nesne değilse, bu bir değer. Tag'lere ekle
         tags[prefix] = obj;
       }
     }
 
-    // Start the flattening process with the top-level object
+    // Düzleştirme işlemini başlat
     flatten(pair);
 
     return tags;
