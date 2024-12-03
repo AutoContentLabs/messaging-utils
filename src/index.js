@@ -3,7 +3,7 @@
 // utils 
 const batchSize = require("./utils/batchSize");
 const fileWriter = require("./utils/fileWriter");
-const telemetry = require("./utils/telemetry");
+const telemetry = require("./utils/Telemetry");
 const transformer = require("./utils/transformer");
 const validator = require("./utils/validator");
 
