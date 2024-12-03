@@ -11,6 +11,7 @@
  */
 
 const winston = require('winston');
+require('winston-gelf');
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -123,7 +124,22 @@ const logger = winston.createLogger({
         })
       ),
     }),
+
+    new winston.transports.Gelf({
+      level: 'info',
+      gelfPro: {
+        host: 'logstash',
+        port: 5044,
+        timeout: 2000
+      },
+      handleExceptions: true,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+    })
   ],
+  exitOnError: false,
 });
 
 module.exports = logger;
