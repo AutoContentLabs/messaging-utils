@@ -22,4 +22,21 @@ async function retryWithBackoff(fn, maxRetries = 3, initialDelay = 500) {
     }
 }
 
-module.exports = { retryWithBackoff }
+/**
+ * Executes the provided async action with a timeout.
+ *
+ * @param {Function} action - The async function to execute.
+ * @param {number} timeoutMs - Timeout duration in milliseconds.
+ * @returns {Promise<any>} - The result of the action.
+ * @throws Will throw an error if the operation times out.
+ */
+async function withTimeout(action, timeoutMs) {
+    return Promise.race([
+        action(),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Operation timed out")), timeoutMs)
+        ),
+    ]);
+}
+
+module.exports = { retryWithBackoff, withTimeout }
